@@ -14,6 +14,7 @@ const FALLBACK_ROOM_DATA = {
 export function useFirebaseRoom(roomId, initialRoomName = "WatchPro Lobby") {
   const [roomData, setRoomData] = useState(null);
   const [messages, setMessages] = useState([]);
+  const [roomHistory, setRoomHistory] = useState([]);
   const [aiSummaries, setAiSummaries] = useState([]);
   const [isSandbox, setIsSandbox] = useState(false);
 
@@ -27,6 +28,7 @@ export function useFirebaseRoom(roomId, initialRoomName = "WatchPro Lobby") {
     let unsubscribeRoom = null;
     let unsubscribeChat = null;
     let unsubscribeAi = null;
+    let unsubscribeHistory = null;
     let resolved = false;
 
     // Failsafe timeout
@@ -112,6 +114,21 @@ export function useFirebaseRoom(roomId, initialRoomName = "WatchPro Lobby") {
       );
     } catch(e) { console.log("Chat init error"); }
 
+    // History listener
+    try {
+      const qHistory = query(
+        collection(db, "rooms", roomId, "roomHistory"),
+        orderBy("timestamp", "desc"),
+        limit(20)
+      );
+      unsubscribeHistory = onSnapshot(qHistory,
+        (snap) => {
+          setRoomHistory(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+        },
+        () => console.log("History fallback active")
+      );
+    } catch(e) { console.log("History init error"); }
+
     // AI summaries listener
     try {
       const qAi = query(
@@ -132,10 +149,11 @@ export function useFirebaseRoom(roomId, initialRoomName = "WatchPro Lobby") {
       if (unsubscribeRoom) unsubscribeRoom();
       if (unsubscribeChat) unsubscribeChat();
       if (unsubscribeAi) unsubscribeAi();
+      if (unsubscribeHistory) unsubscribeHistory();
     };
   }, [roomId]);
 
-  return { roomData, messages, aiSummaries, setRoomData: safeSetRoomData, isSandbox };
+  return { roomData, messages, aiSummaries, roomHistory, setRoomData: safeSetRoomData, isSandbox };
 }
 
 export function useFirebasePresence(roomId, user, profile) {

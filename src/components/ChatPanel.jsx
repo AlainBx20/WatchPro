@@ -7,18 +7,24 @@ import EmojiShelf from './EmojiShelf';
 
 const QUICK_REACTIONS = ['❤️', '😂', '😮', '🔥', '👏', '😭', '🤯', '💯'];
 
-// Local chat history for when Firestore is in sandbox mode
-const LOCAL_HISTORY = [
-  { id: 'h1', title: 'Lo-fi Hip Hop Radio', emoji: '🎵', meta: 'Watched 2h ago · 3 participants', url: 'https://www.youtube.com/watch?v=jfKfPfyJRdk' },
-  { id: 'h2', title: 'Nature Documentary', emoji: '🌍', meta: 'Watched yesterday · 5 participants', url: 'https://www.youtube.com/watch?v=BHACKCNDMW8' },
-  { id: 'h3', title: 'Epic Music Mix', emoji: '🎶', meta: 'Watched 3 days ago · 2 participants', url: 'https://www.youtube.com/watch?v=hHW1oY26kxQ' },
-];
+// Dynamic history will be passed from App.jsx via props
 
-export default function ChatPanel({ activeTab, setActiveTab, roomId, currentUser, firestoreMessages, localProfile, onReaction }) {
+export default function ChatPanel({ 
+  activeTab, setActiveTab, roomId, currentUser, firestoreMessages, 
+  localProfile, onReaction, roomHistory, onUrlChange 
+}) {
   const [input, setInput] = useState('');
   const [localMessages, setLocalMessages] = useState([]);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const messagesEndRef = useRef(null);
+
+  // ... (some logic remains)
+
+  const historyList = (roomHistory || []).sort((a, b) => {
+    const timeA = a.timestamp?.toDate ? a.timestamp.toDate().getTime() : 0;
+    const timeB = b.timestamp?.toDate ? b.timestamp.toDate().getTime() : 0;
+    return timeB - timeA; // Descending
+  });
 
   // Combine Firestore messages with local messages, filtering out duplicates
   const allMessages = [...(firestoreMessages || [])];
@@ -288,56 +294,47 @@ export default function ChatPanel({ activeTab, setActiveTab, roomId, currentUser
       )}
 
       {activeTab === 'History' && (
-        <div style={{ flex: 1, overflow: 'auto', padding: 16 }}>
+        <div className="history-tab" style={{ flex: 1, overflowY: 'auto', padding: 16 }}>
           <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 16 }}>
-            Recent Sessions
+             Played in this session
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {LOCAL_HISTORY.map(item => (
-              <div key={item.id} style={{
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {historyList.length === 0 && (
+              <div style={{ padding: 40, textAlign: 'center', opacity: 0.5, fontSize: '0.85rem' }}>
+                No history yet. Start watching something!
+              </div>
+            )}
+            {historyList.map(item => (
+              <div key={item.id} className="history-item group" onClick={() => onUrlChange(item.url)} style={{
                 display: 'flex', alignItems: 'center', gap: 12,
-                padding: '12px 14px',
+                padding: '10px',
                 background: 'var(--bg-glass)',
                 border: '1px solid var(--border)',
                 borderRadius: 'var(--radius-md)',
                 cursor: 'pointer',
-                transition: 'all 0.2s ease'
-              }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--border-accent)'; e.currentTarget.style.background = 'var(--bg-hover)'; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'var(--bg-glass)'; }}
-              >
-                <div style={{
-                  width: 44, height: 44,
-                  borderRadius: 'var(--radius-md)',
-                  background: 'linear-gradient(135deg, var(--accent-soft), var(--accent-2-soft))',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: '1.3rem', flexShrink: 0
-                }}>
-                  {item.emoji}
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{
-                    fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-primary)',
-                    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
-                  }}>{item.title}</div>
-                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: 2 }}>{item.meta}</div>
-                </div>
-                <PlayCircle size={18} style={{ color: 'var(--accent-bright)', flexShrink: 0, opacity: 0.7 }} />
+                transition: 'all 0.2s ease',
+                position: 'relative',
+                overflow: 'hidden'
+              }}>
+                 <div style={{ 
+                   width: 50, height: 50, borderRadius: 8, background: '#111', 
+                   overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' 
+                 }}>
+                    {item.url?.includes('magnet:') ? <PlayCircle size={24} color="var(--success)" /> : <PlayCircle size={24} color="var(--accent-bright)" />}
+                 </div>
+                 <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: '0.82rem', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: '#fff' }}>
+                      {item.title || "Untitled Link"}
+                    </div>
+                    <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: 2 }}>
+                       {item.timestamp?.toDate ? item.timestamp.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recently'}
+                    </div>
+                 </div>
+                 <div className="history-play-overlay" style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', opacity: 0, transition: '0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <PlayCircle size={30} fill="#fff" />
+                 </div>
               </div>
             ))}
-          </div>
-
-          <div style={{
-            marginTop: 24, padding: 16,
-            background: 'linear-gradient(135deg, rgba(124,58,237,0.08), rgba(14,165,233,0.08))',
-            border: '1px solid rgba(124,58,237,0.2)',
-            borderRadius: 'var(--radius-md)',
-            textAlign: 'center'
-          }}>
-            <div style={{ fontSize: '0.82rem', fontWeight: 600, marginBottom: 4 }}>✨ Session Recap</div>
-            <div style={{ fontSize: '0.73rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>
-              AI-generated summaries of your watch sessions will appear here
-            </div>
           </div>
         </div>
       )}

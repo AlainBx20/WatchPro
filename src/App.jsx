@@ -230,7 +230,7 @@ function WatchRoom() {
   };
 
   // Firebase hooks
-  const { roomData, messages, aiSummaries, setRoomData, isSandbox } = useFirebaseRoom(roomId, initialRoomName);
+  const { roomData, messages, aiSummaries, roomHistory, setRoomData, isSandbox } = useFirebaseRoom(roomId, initialRoomName);
   const { presenceData } = useFirebasePresence(roomId, user, profile);
   
   const { sendReaction } = useFirebaseReactions(roomId, (emoji, sender) => {
@@ -364,8 +364,18 @@ function WatchRoom() {
           "playbackState.isPlaying": true,
           "playbackState.lastUpdatedAt": serverTimestamp()
         });
-        console.log("✅ Video URL synced to Firestore");
-      } catch(err) { console.warn("URL sync failed:", err.message); }
+
+        // Add to room history
+        const roomHistoryRef = collection(db, "rooms", roomId, "roomHistory");
+        await addDoc(roomHistoryRef, {
+          url: newUrl,
+          title: newUrl.includes('magnet:') ? "Movie Stream" : "YouTube Video",
+          timestamp: serverTimestamp(),
+          addedBy: user.uid
+        });
+
+        console.log("✅ Video URL synced to Firestore & Added to History");
+      } catch(err) { console.warn("URL sync/history failed:", err.message); }
     }
   };
 
@@ -521,6 +531,8 @@ function WatchRoom() {
           firestoreMessages={messages} 
           localProfile={profile} 
           onReaction={(emoji) => sendReaction(emoji, profile?.name || user?.displayName || 'Guest')}
+          roomHistory={roomHistory}
+          onUrlChange={handleUrlChange}
         />
       </div>
 

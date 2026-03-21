@@ -32,10 +32,27 @@ export default function WebTorrentPlayer({
     // Cleanup any existing torrents before adding new
     wtClient.torrents.forEach(t => t.destroy());
 
+    // High-performance WebSocket trackers for browser-based WebTorrent
+    const announce = [
+      'wss://tracker.openwebtorrent.com',
+      'wss://tracker.btorrent.xyz',
+      'wss://tracker.files.fm:7073/announce',
+      'wss://tracker.gbitt.info',
+      'wss://tracker.webtorrent.dev'
+    ];
+
     setLoadingMsg('Resolving Magnet Metadata...');
     setIsReady(false);
     
-    const torrent = wtClient.add(url, { announce: [] }, (torrent) => {
+    // Auto-append trackers to the magnet URL if they aren't there
+    let refinedUrl = url;
+    announce.forEach(tr => {
+      if (!refinedUrl.includes(encodeURIComponent(tr))) {
+        refinedUrl += `&tr=${encodeURIComponent(tr)}`;
+      }
+    });
+
+    const torrent = wtClient.add(refinedUrl, (torrent) => {
       // Torrent is ready to be streamed
       setLoadingMsg('Mounting Stream...');
       

@@ -31,81 +31,81 @@ export default function ContentBrowser({ onSelect, onClose }) {
   const [isSearching, setIsSearching] = useState(false);
   const [moviesCache, setMoviesCache] = useState({});
 
-  // Fetch movies helper with Bulletproof Failover (Domains + Proxies)
+  // Fetch movies helper with Bulletproof Failover (Direct Mirrors -> Proxies)
   const fetchMovies = async (genre = 'popular', searchQuery = '') => {
     setIsSearching(true);
+    setResults(null); 
     
-    // Cloudflare 1016 fix: try multiple mirrors if yts.mx is having DNS issues
+    // Cloudflare 1016 fix: try multiple mirrors
     const domains = ['yts.mx', 'yts.pm', 'yts.rs', 'yts.lt'];
     const proxies = [
+      (url) => url, // Try direct first
       (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
       (url) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
       (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`
     ];
 
     let success = false;
-    
-    // Double-nested failover: try each domain with each proxy until one hits
     for (const domain of domains) {
       if (success) break;
       
-      let target = `https://${domain}/api/v2/list_movies.json?limit=24&sort_by=${searchQuery ? 'title' : 'download_count'}`;
-      if (searchQuery) target += `&query_term=${encodeURIComponent(searchQuery)}`;
-      if (genre && genre !== 'popular' && !searchQuery) target += `&genre=${genre}`;
+      const target = `https://${domain}/api/v2/list_movies.json?limit=24&sort_by=${searchQuery ? 'title' : 'download_count'}${searchQuery ? `&query_term=${encodeURIComponent(searchQuery)}` : ''}${genre && genre !== 'popular' ? `&genre=${genre}` : ''}`;
 
       for (const proxyFn of proxies) {
         if (success) break;
         try {
-          const proxyUrl = proxyFn(target);
-          const res = await fetch(proxyUrl);
+          const res = await fetch(proxyFn(target));
           if (!res.ok) continue;
           
-          const rawData = await res.json();
-          // Some proxies wrap the response in an object
-          const data = rawData.contents ? JSON.parse(rawData.contents) : rawData;
+          let data = await res.json();
+          if (data.contents) data = JSON.parse(data.contents);
 
           if (data.status === 'ok' && data.data.movies) {
-            const formatted = data.data.movies.map(m => ({
+            setResults(data.data.movies.map(m => ({
               type: 'movie', id: m.id, title: m.title, year: m.year, rating: m.rating,
               thumbnail: m.medium_cover_image, summary: m.summary, torrents: m.torrents, url: m.url
-            }));
-            setResults(formatted);
+            })));
             success = true;
           }
-        } catch (err) {
-          console.warn(`Proxy/Domain fail: ${domain} via proxy`, err.message);
-        }
+        } catch (err) { continue; }
       }
     }
-
-    if (!success) {
-      setResults([]);
-      console.warn("All movie mirrors and proxies failed.");
-    }
+    if (!success) setResults([]);
     setIsSearching(false);
   };
 
   useEffect(() => {
-    if (browserMode === 'movies') {
+    if (browserMode === 'movies' && !query) {
       fetchMovies(activeTab.toLowerCase());
-    } else {
-      setResults(null);
     }
   }, [browserMode, activeTab]);
 
   const handleSearch = async (e) => {
     e.preventDefault();
-    if (!query.trim()) {
-      setResults(null);
-      return;
-    }
+    if (!query.trim()) return;
     
     setIsSearching(true);
+    setResults(null);
+
     if (browserMode === 'youtube') {
       try {
-        const aiResults = await generateYoutubeSearch(query);
-        setResults(aiResults?.map(r => ({ ...r, type: 'youtube' })) || []);
-      } catch (e) { setResults([]); }
+        // High-speed Invidious Search (Non-AI)
+        const res = await fetch(`https://inv.riverside.rocks/api/v1/search?q=${encodeURIComponent(query)}&type=video`);
+        const data = await res.json();
+        const formatted = data.map(v => ({
+          type: 'youtube',
+          title: v.title,
+          channel: v.author,
+          thumbnail: v.videoThumbnails?.[0]?.url || `https://img.youtube.com/vi/${v.videoId}/mqdefault.jpg`,
+          url: `https://www.youtube.com/watch?v=${v.videoId}`,
+          duration: v.durationText || "0:00",
+          views: (v.viewCount || 0).toLocaleString()
+        }));
+        setResults(formatted);
+      } catch (err) {
+        console.error("YouTube search failed", err);
+        setResults([]);
+      }
     } else {
       await fetchMovies('popular', query);
     }

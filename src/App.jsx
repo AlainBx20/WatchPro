@@ -470,6 +470,7 @@ function WatchRoom() {
           onlineCount={onlineCount}
           remoteStreams={remoteStreams}
           localStream={localStream}
+          currentUserId={user?.uid}
         />
         
         {/* Center column: video + voice controls */}

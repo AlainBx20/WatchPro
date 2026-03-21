@@ -37,7 +37,7 @@ function ParticipantVideo({ stream, isLocal }) {
   );
 }
 
-export default function ParticipantsPanel({ participants, collapsed, remoteStreams, localStream }) {
+export default function ParticipantsPanel({ participants, collapsed, remoteStreams, localStream, currentUserId }) {
   const online = participants.filter(p => p.status === 'online');
   const offline = participants.filter(p => !p.status || p.status === 'offline');
 
@@ -52,7 +52,8 @@ export default function ParticipantsPanel({ participants, collapsed, remoteStrea
         {online.map(p => {
           const isSpeaking = p.media?.isSpeaking;
           const isMuted = p.media?.micOn === false;
-          const stream = p.id.includes('local') || p.id === 'current-user-id' ? localStream : (remoteStreams ? remoteStreams[p.id] : null);
+          // CORRECTED: Use explicit currentUserId check for local stream
+          const stream = p.id === currentUserId ? localStream : (remoteStreams ? remoteStreams[p.id] : null);
           const hasVideo = !!stream;
 
           return (

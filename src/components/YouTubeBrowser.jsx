@@ -31,37 +31,52 @@ export default function ContentBrowser({ onSelect, onClose }) {
   const [isSearching, setIsSearching] = useState(false);
   const [moviesCache, setMoviesCache] = useState({});
 
-  // Fetch movies helper with proxy
+  // Fetch movies helper with a Failover Proxy System
   const fetchMovies = async (genre = 'popular', searchQuery = '') => {
     setIsSearching(true);
-    try {
-      // Use api.allorigins.win to bypass potential DNS/CORS blocks on yts.mx
-      let target = `https://yts.mx/api/v2/list_movies.json?limit=24&sort_by=${searchQuery ? 'title' : 'download_count'}`;
-      if (searchQuery) target += `&query_term=${encodeURIComponent(searchQuery)}`;
-      if (genre && genre !== 'popular' && !searchQuery) target += `&genre=${genre}`;
-      
-      const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(target)}`;
-      const res = await fetch(proxyUrl);
-      const data = await res.json();
-      
-      if (data.status === 'ok' && data.data.movies) {
-        const formatted = data.data.movies.map(m => ({
-          type: 'movie',
-          id: m.id,
-          title: m.title,
-          year: m.year,
-          rating: m.rating,
-          thumbnail: m.medium_cover_image,
-          summary: m.summary,
-          torrents: m.torrents,
-          url: m.url // temporary
-        }));
-        if (searchQuery) setResults(formatted);
-        else setResults(formatted);
+    let target = `https://yts.mx/api/v2/list_movies.json?limit=24&sort_by=${searchQuery ? 'title' : 'download_count'}`;
+    if (searchQuery) target += `&query_term=${encodeURIComponent(searchQuery)}`;
+    if (genre && genre !== 'popular' && !searchQuery) target += `&genre=${genre}`;
+
+    // List of reliable public CORS proxies to try
+    const proxies = [
+      (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+      (url) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+      (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`
+    ];
+
+    let success = false;
+    for (const proxyFn of proxies) {
+      if (success) break;
+      try {
+        const proxyUrl = proxyFn(target);
+        const res = await fetch(proxyUrl);
+        if (!res.ok) throw new Error("Proxy error");
+        
+        const data = await res.json();
+        if (data.status === 'ok' && data.data.movies) {
+          const formatted = data.data.movies.map(m => ({
+            type: 'movie',
+            id: m.id,
+            title: m.title,
+            year: m.year,
+            rating: m.rating,
+            thumbnail: m.medium_cover_image,
+            summary: m.summary,
+            torrents: m.torrents,
+            url: m.url
+          }));
+          setResults(formatted);
+          success = true;
+        }
+      } catch (err) {
+        console.warn(`Attempt failed with proxy:`, err.message);
       }
-    } catch (err) {
-      console.warn("Movie fetch failed, likely proxy or site down.", err);
-      if (searchQuery) setResults([]);
+    }
+
+    if (!success) {
+      setResults([]);
+      console.warn("All movie proxies failed.");
     }
     setIsSearching(false);
   };

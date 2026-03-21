@@ -5,23 +5,7 @@ import {
 } from 'lucide-react';
 import { generateYoutubeSearch } from '../services/gemini';
 
-const YOUTUBE_FEEDS = {
-  'Trending': [
-    { title: "Dune: Part Two | Official Trailer", channel: "Warner Bros. Pictures", id: "U2Qp5pL3ovA", duration: "3:01", views: "34M", url: "https://www.youtube.com/watch?v=U2Qp5pL3ovA" },
-    { title: "MrBeast - 100 Days Trapped", channel: "MrBeast", id: "5fg9B9Xh1MQ", duration: "18:22", views: "155M", url: "https://www.youtube.com/watch?v=5fg9B9Xh1MQ" },
-    { title: "Apple Vision Pro - First Impressions!", channel: "Marques Brownlee", id: "QMQxqvvXhxs", duration: "21:14", views: "8.2M", url: "https://www.youtube.com/watch?v=QMQxqvvXhxs" },
-    { title: "GTA VI - Movie Trailer", channel: "Rockstar Games", id: "QdBZY2fkU-0", duration: "1:30", views: "180M", url: "https://www.youtube.com/watch?v=QdBZY2fkU-0" },
-    { title: "Lofi Beats - Chill Garden", channel: "Lofi Studio", id: "jfKfPfyJRdk", duration: "LIVE", views: "1M+", url: "https://www.youtube.com/watch?v=jfKfPfyJRdk" },
-    { title: "Dune Soundtrack - Hans Zimmer", channel: "Zimmer Dev", id: "E6pQyitW_E8", duration: "8:44", views: "12M", url: "https://www.youtube.com/watch?v=E6pQyitW_E8" }
-  ],
-  'Music': [
-    { title: "lofi hip hop radio 📚", channel: "Lofi Girl", id: "jfKfPfyJRdk", duration: "LIVE", views: "1M+", url: "https://www.youtube.com/watch?v=jfKfPfyJRdk" },
-    { title: "synthwave radio 🌌", channel: "Lofi Girl", id: "4xDzrJKXOOY", duration: "LIVE", views: "200K+", url: "https://www.youtube.com/watch?v=4xDzrJKXOOY" },
-    { title: "Interstellar Main Theme", channel: "Hans Zimmer", id: "IDsCtDRV2lg", duration: "12:15", views: "45M", url: "https://www.youtube.com/watch?v=IDsCtDRV2lg" }
-  ]
-};
-
-const MOVIE_GENRES = ['popular', 'action', 'sci-fi', 'horror', 'romance', 'animation'];
+const YOUTUBE_CATEGORIES = ['Trending', 'Music', 'Gaming', 'Animation', 'Movies'];
 
 export default function ContentBrowser({ onSelect, onClose }) {
   const [browserMode, setBrowserMode] = useState('youtube'); // 'youtube' or 'movies'
@@ -30,6 +14,35 @@ export default function ContentBrowser({ onSelect, onClose }) {
   const [results, setResults] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
   const [moviesCache, setMoviesCache] = useState({});
+
+  // LIVE YouTube Fetcher (Non-AI)
+  const fetchYoutubeFeed = async (category = 'Trending') => {
+    setIsSearching(true);
+    setResults(null);
+    try {
+      const type = category === 'Trending' ? 'trending' : 'search';
+      const q = category === 'Trending' ? '' : `&q=${encodeURIComponent(category)}`;
+      const url = `https://inv.riverside.rocks/api/v1/${type}${q ? q : ''}`;
+      
+      const res = await fetch(url);
+      const data = await res.json();
+      
+      const formatted = (Array.isArray(data) ? data : data.videos || []).slice(0, 24).map(v => ({
+        type: 'youtube',
+        title: v.title,
+        channel: v.author,
+        thumbnail: v.videoThumbnails?.[0]?.url || `https://img.youtube.com/vi/${v.videoId}/mqdefault.jpg`,
+        url: `https://www.youtube.com/watch?v=${v.videoId}`,
+        duration: v.durationText || "0:00",
+        views: (v.viewCount || 0).toLocaleString()
+      }));
+      setResults(formatted);
+    } catch (err) {
+      console.error("YouTube feed failed", err);
+      setResults([]);
+    }
+    setIsSearching(false);
+  };
 
   // Fetch movies helper with Bulletproof Failover (Direct Mirrors -> Proxies)
   const fetchMovies = async (genre = 'popular', searchQuery = '') => {
@@ -75,8 +88,12 @@ export default function ContentBrowser({ onSelect, onClose }) {
   };
 
   useEffect(() => {
-    if (browserMode === 'movies' && !query) {
-      fetchMovies(activeTab.toLowerCase());
+    if (!query) {
+      if (browserMode === 'movies') {
+        fetchMovies(activeTab.toLowerCase());
+      } else {
+        fetchYoutubeFeed(activeTab);
+      }
     }
   }, [browserMode, activeTab]);
 
@@ -92,7 +109,7 @@ export default function ContentBrowser({ onSelect, onClose }) {
         // High-speed Invidious Search (Non-AI)
         const res = await fetch(`https://inv.riverside.rocks/api/v1/search?q=${encodeURIComponent(query)}&type=video`);
         const data = await res.json();
-        const formatted = data.map(v => ({
+        const formatted = data.slice(0, 24).map(v => ({
           type: 'youtube',
           title: v.title,
           channel: v.author,
@@ -178,15 +195,16 @@ export default function ContentBrowser({ onSelect, onClose }) {
 
         {/* Sub-Tabs */}
         {!results && (
-          <div className="hide-scroll" style={{ padding: '0 32px', display: 'flex', gap: 20, borderBottom: '1px solid var(--border)', overflowX: 'auto' }}>
-            {(browserMode === 'youtube' ? Object.keys(YOUTUBE_FEEDS) : MOVIE_GENRES).map(tab => (
+          <div className="hide-scroll" style={{ padding: '0 32px', display: 'flex', gap: 24, borderBottom: '1px solid var(--border)', overflowX: 'auto', flexShrink: 0 }}>
+            {(browserMode === 'youtube' ? YOUTUBE_CATEGORIES : ['popular', 'action', 'sci-fi', 'horror', 'romance', 'animation']).map(tab => (
               <button
                 key={tab}
-                onClick={() => setActiveTab(tab)}
+                onClick={() => { setActiveTab(tab); setResults(null); }}
                 style={{
-                  padding: '14px 0', fontSize: '0.85rem', fontWeight: 600, textTransform: 'capitalize',
-                  color: activeTab === tab ? '#fff' : 'var(--text-muted)',
-                  borderBottom: `2px solid ${activeTab === tab ? (browserMode === 'youtube' ? 'var(--accent)' : '#10b981') : 'transparent'}`
+                  padding: '16px 0', fontSize: '0.85rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px',
+                  color: activeTab === tab ? (browserMode === 'youtube' ? 'var(--accent-bright)' : '#10b981') : 'var(--text-muted)',
+                  borderBottom: `2px solid ${activeTab === tab ? (browserMode === 'youtube' ? 'var(--accent-bright)' : '#10b981') : 'transparent'}`,
+                  background: 'transparent', transition: 'all 0.2s', whiteSpace: 'nowrap'
                 }}
               >
                 {tab}
@@ -196,18 +214,18 @@ export default function ContentBrowser({ onSelect, onClose }) {
         )}
 
         {/* Grid */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: 32 }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '32px' }} className="custom-scroll">
           {isSearching ? (
              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 15 }}>
-               <div className="loader-ring" style={{ borderTopColor: browserMode === 'youtube' ? 'var(--accent)' : '#10b981' }}></div>
-               <div style={{ color: 'var(--text-muted)' }}>Searching {browserMode}...</div>
+               <div className="loader-ring" style={{ borderTopColor: browserMode === 'youtube' ? 'var(--accent-bright)' : '#10b981' }}></div>
+               <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Fetching live {browserMode}...</div>
              </div>
-          ) : (results || YOUTUBE_FEEDS[activeTab] || []).length > 0 ? (
-            <div style={{ display: 'grid', gridTemplateColumns: `repeat(auto-fill, minmax(${browserMode === 'movies' ? '160px' : '280px'}, 1fr))`, gap: 24 }}>
-              {(results || (browserMode === 'youtube' ? YOUTUBE_FEEDS[activeTab] : [])).map((item, i) => (
+          ) : (results && results.length > 0) ? (
+            <div style={{ display: 'grid', gridTemplateColumns: `repeat(auto-fill, minmax(${browserMode === 'movies' ? '180px' : '280px'}, 1fr))`, gap: '24px' }}>
+              {results.map((item, i) => (
                 <div 
                   key={i} 
-                  className="media-card group"
+                  className="media-card group animate-fadeIn"
                   onClick={() => handleSelect(item)}
                   style={{ cursor: 'pointer' }}
                 >

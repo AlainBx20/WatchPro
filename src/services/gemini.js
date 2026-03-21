@@ -1,10 +1,15 @@
 import { GoogleGenAI } from '@google/genai';
 
 // By default, try to read from localStorage. If empty, it will throw when used.
+// THE SECRET KEY HAS BEEN MOVED TO THE SECURE .env FILE.
 export function getGeminiClient() {
-  const apiKey = localStorage.getItem('watchpro_gemini_key') || 'AIzaSyCm004ekGhNO0W11qG24IuDzKWpleYK9yE'; // Fallback to provided key
-  if (!apiKey) {
-    throw new Error('No Gemini API key found. Please set it in Settings.');
+  const envKey = import.meta.env.VITE_GEMINI_API_KEY;
+  const localKey = localStorage.getItem('watchpro_gemini_key');
+  
+  const apiKey = localKey || envKey;
+
+  if (!apiKey || apiKey === 'your_key_here') {
+    throw new Error('No Gemini API key found. Please add a .env file or set it in Chat Settings.');
   }
   return new GoogleGenAI({ apiKey });
 }

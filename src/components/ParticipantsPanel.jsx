@@ -1,3 +1,4 @@
+import { useRef, useEffect } from 'react';
 import { Mic, MicOff, Crown, Wifi, WifiOff } from 'lucide-react';
 
 function SpeakingWave() {
@@ -10,7 +11,33 @@ function SpeakingWave() {
   );
 }
 
-export default function ParticipantsPanel({ participants, collapsed }) {
+function ParticipantVideo({ stream, isLocal }) {
+  const videoRef = useRef(null);
+  useEffect(() => {
+    if (videoRef.current && stream) {
+      videoRef.current.srcObject = stream;
+    }
+  }, [stream]);
+
+  return (
+    <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', borderRadius: '50%', background: '#000' }}>
+      <video
+        ref={videoRef}
+        autoPlay
+        playsInline
+        muted={isLocal}
+        style={{
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover',
+          transform: isLocal ? 'scaleX(-1)' : 'none'
+        }}
+      />
+    </div>
+  );
+}
+
+export default function ParticipantsPanel({ participants, collapsed, remoteStreams, localStream }) {
   const online = participants.filter(p => p.status === 'online');
   const offline = participants.filter(p => !p.status || p.status === 'offline');
 
@@ -25,6 +52,8 @@ export default function ParticipantsPanel({ participants, collapsed }) {
         {online.map(p => {
           const isSpeaking = p.media?.isSpeaking;
           const isMuted = p.media?.micOn === false;
+          const stream = p.id.includes('local') || p.id === 'current-user-id' ? localStream : (remoteStreams ? remoteStreams[p.id] : null);
+          const hasVideo = !!stream;
 
           return (
             <div key={p.id} className="participant-item">
@@ -33,10 +62,13 @@ export default function ParticipantsPanel({ participants, collapsed }) {
                   className={`avatar ${p.isHost ? 'avatar-host' : ''}`}
                   style={{ 
                     background: p.avatar ? 'none' : `linear-gradient(135deg, ${p.color}cc, ${p.color}66)`,
-                    overflow: 'hidden'
+                    overflow: 'hidden',
+                    position: 'relative'
                   }}
                 >
-                  {p.avatar ? (
+                  {hasVideo ? (
+                    <ParticipantVideo stream={stream} isLocal={p.id.includes('(You)') || p.id.startsWith('local')} />
+                  ) : p.avatar ? (
                     <img src={p.avatar} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   ) : (
                     p.initials

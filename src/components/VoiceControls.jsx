@@ -4,22 +4,32 @@ import { useAudioLevels } from '../hooks/useWatchParty';
 import { rtdb } from '../services/firebase';
 import { ref, update } from 'firebase/database';
 
-export default function VoiceControls({ roomId, uid }) {
+export default function VoiceControls({ roomId, uid, onStart, onStop, isCapturing }) {
   const [micOn, setMicOn] = useState(false);
   const [videoOn, setVideoOn] = useState(false);
   const [deafened, setDeafened] = useState(false);
   const [isHoveringPtt, setIsHoveringPtt] = useState(false);
 
-  // Auto-mute when deafened
-  useEffect(() => {
-    if (deafened) {
-      setMicOn(false);
+  // Trigger real hardware cap when buttons toggled
+  const handleToggleMic = async () => {
+    const nextMic = !micOn;
+    setMicOn(nextMic);
+    if (nextMic || videoOn) {
+      await onStart(videoOn, nextMic);
+    } else if (!nextMic && !videoOn) {
+      onStop();
     }
-  }, [deafened]);
+  };
 
-  // Simulate speaking when mic is on, or when PTT is pressed
-  const isSpeaking = (micOn || isHoveringPtt) && !deafened;
-  const levels = useAudioLevels(isSpeaking);
+  const handleToggleVideo = async () => {
+    const nextVideo = !videoOn;
+    setVideoOn(nextVideo);
+    if (nextVideo || micOn) {
+      await onStart(nextVideo, micOn);
+    } else if (!nextVideo && !micOn) {
+      onStop();
+    }
+  };
 
   // Sync media intent up strictly for Presence so remote avatars can render mic state
   useEffect(() => {
@@ -28,16 +38,19 @@ export default function VoiceControls({ roomId, uid }) {
       update(ref(rtdb, `presence/${roomId}/${uid}`), {
         'media/micOn': micOn,
         'media/camOn': videoOn,
-        'media/isSpeaking': isSpeaking
+        'media/isSpeaking': (micOn || isHoveringPtt) && !deafened
       });
     } catch(err) { console.error("Could not sync media intent", err) }
-  }, [roomId, uid, micOn, videoOn, isSpeaking]);
+  }, [roomId, uid, micOn, videoOn, isHoveringPtt, deafened]);
+
+  const isSpeaking = (micOn || isHoveringPtt) && !deafened;
+  const levels = useAudioLevels(isSpeaking);
 
   return (
     <div className="voice-controls">
       <button
         className={`voice-btn ${micOn ? 'active' : 'danger'}`}
-        onClick={() => setMicOn(!micOn)}
+        onClick={handleToggleMic}
         title={micOn ? 'Mute Microphone' : 'Unmute Microphone'}
       >
         {micOn ? <Mic size={20} /> : <MicOff size={20} />}
@@ -45,7 +58,7 @@ export default function VoiceControls({ roomId, uid }) {
 
       <button
         className={`voice-btn ${videoOn ? 'active' : 'danger'}`}
-        onClick={() => setVideoOn(!videoOn)}
+        onClick={handleToggleVideo}
         title={videoOn ? 'Stop Video' : 'Start Video'}
       >
         {videoOn ? <Video size={20} /> : <VideoOff size={20} />}

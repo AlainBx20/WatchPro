@@ -3,6 +3,7 @@ import './App.css';
 
 import { useToasts } from './hooks/useWatchParty';
 import { useFirebaseRoom, useFirebasePresence, useFirebaseReactions } from './hooks/useFirebaseSync';
+import { useMediaRTC } from './hooks/useMediaRTC';
 import { db, auth } from './services/firebase';
 import { doc, updateDoc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { signInAnonymously } from 'firebase/auth';
@@ -232,10 +233,14 @@ function WatchRoom() {
   const { roomData, messages, aiSummaries, setRoomData, isSandbox } = useFirebaseRoom(roomId, initialRoomName);
   const { presenceData } = useFirebasePresence(roomId, user, profile);
   
-  // Real-time emoji reaction syncing
   const { sendReaction } = useFirebaseReactions(roomId, (emoji, sender) => {
     if (window.__addFloatingEmoji) window.__addFloatingEmoji(emoji, sender);
   });
+
+  // Real-time P2P Voice/Video Mesh
+  const { 
+    localStream, remoteStreams, startCapture, stopCapture, isCapturing 
+  } = useMediaRTC(roomId, user?.uid, profile?.name);
 
   const [panelOpen, setPanelOpen] = useState(true);
   const [activeTab, setActiveTab] = useState('Chat');
@@ -459,7 +464,13 @@ function WatchRoom() {
       />
 
       <div className="main-layout">
-        <ParticipantsPanel participants={participantsList} collapsed={!panelOpen} onlineCount={onlineCount} />
+        <ParticipantsPanel 
+          participants={participantsList} 
+          collapsed={!panelOpen} 
+          onlineCount={onlineCount}
+          remoteStreams={remoteStreams}
+          localStream={localStream}
+        />
         
         {/* Center column: video + voice controls */}
         <div style={{ 
@@ -492,7 +503,12 @@ function WatchRoom() {
           </div>
 
           <div style={{ height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <VoiceControls roomId={roomId} uid={user?.uid}/>
+            <VoiceControls 
+              roomId={roomId} uid={user?.uid}
+              isCapturing={isCapturing}
+              onStart={startCapture}
+              onStop={stopCapture}
+            />
           </div>
           
         </div>

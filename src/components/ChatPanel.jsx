@@ -245,7 +245,23 @@ export default function ChatPanel({ activeTab, setActiveTab, roomId, currentUser
                 onKeyDown={handleKeyDown}
               />
             </div>
-            <div style={{ position: 'relative', display: 'flex' }}>
+            <div style={{ position: 'relative', display: 'flex', gap: 4 }}>
+              <button 
+                className="icon-btn"
+                onClick={async () => {
+                  const aiMsg = { id: `ai-${Date.now()}`, isAI: true, text: "Summoning AI for a room summary...", createdAt: new Date() };
+                  setLocalMessages(prev => [...prev, aiMsg]);
+                  // Real summarize logic would go here
+                  setTimeout(() => {
+                    setLocalMessages(prev => prev.map(m => m.id === aiMsg.id ? { ...m, text: "I've been monitoring the room! Everyone seems to be enjoying the P2P stream. Should I recommend some similar movies?"} : m));
+                  }, 2000);
+                }}
+                title="WatchPro AI"
+                style={{ color: 'var(--accent-bright)' }}
+              >
+                <Bot size={18} />
+              </button>
+              
               <button 
                 className={`icon-btn ${showEmojiPicker ? 'active' : ''}`} 
                 onClick={() => setShowEmojiPicker(!showEmojiPicker)}
@@ -258,7 +274,6 @@ export default function ChatPanel({ activeTab, setActiveTab, roomId, currentUser
                 <EmojiShelf 
                   onSelect={(emoji) => {
                     setInput(prev => prev + emoji);
-                    // If wanting to "react" instantly if input is empty, could do that too
                     if (!input.trim()) handleReaction(emoji);
                   }}
                   onClose={() => setShowEmojiPicker(false)}

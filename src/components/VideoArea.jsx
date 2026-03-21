@@ -53,7 +53,8 @@ function EmojiFloat({ emoji, x, y, sender }) {
       left: x, top: y, position: 'absolute', 
       display: 'flex', alignItems: 'center', gap: 6,
       pointerEvents: 'none',
-      whiteSpace: 'nowrap'
+      whiteSpace: 'nowrap',
+      zIndex: 50
     }}>
       <span style={{ fontSize: '1.4rem' }}>{emoji}</span>
       {sender && (
@@ -71,6 +72,68 @@ function EmojiFloat({ emoji, x, y, sender }) {
   );
 }
 
+/**
+ * AMBIENT GLOW: Samples the video and projects colors behind it
+ */
+function AmbientGlow({ playerRef, isMagnet, videoEl }) {
+  const canvasRef = useRef(null);
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    
+    let frameId;
+    const updateGlow = () => {
+      try {
+        let source = null;
+        if (isMagnet && videoEl) {
+          source = videoEl;
+        } else if (playerRef.current && playerRef.current.getIframe) {
+          // YT Iframe doesn't allow cross-origin sampling easily, 
+          // but we can provide a fallback gradient or use a proxy if needed.
+          // For now, we'll focus on P2P/HTML5 sampling.
+          source = null; 
+        }
+
+        if (source && source.readyState >= 2) {
+          ctx.drawImage(source, 0, 0, canvas.width, canvas.height);
+          const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+          
+          // Ultra-simple average
+          let r=0, g=0, b=0;
+          for (let i=0; i<data.length; i+=40) { // Sparse sampling
+            r += data[i]; g += data[i+1]; b += data[i+2];
+          }
+          const count = data.length / 40;
+          const avgR = Math.round(r/count);
+          const avgG = Math.round(g/count);
+          const avgB = Math.round(b/count);
+          
+          if (containerRef.current) {
+            containerRef.current.style.boxShadow = `0 0 120px 40px rgba(${avgR}, ${avgG}, ${avgB}, 0.35)`;
+          }
+        }
+      } catch(e) {}
+      frameId = requestAnimationFrame(updateGlow);
+    };
+    
+    updateGlow();
+    return () => cancelAnimationFrame(frameId);
+  }, [isMagnet, videoEl, playerRef]);
+
+  return (
+    <div ref={containerRef} style={{ 
+      position: 'absolute', inset: '10%', zIndex: -1, 
+      transition: 'box-shadow 0.8s ease',
+      borderRadius: '50px' 
+    }}>
+      <canvas ref={canvasRef} width="32" height="18" style={{ display: 'none' }} />
+    </div>
+  );
+}
+
 export default function VideoArea({
   appState, currentTime, duration, onSeek, onStateChange,
   volume, setVolume, isFullscreen, toggleFullscreen,
@@ -81,6 +144,7 @@ export default function VideoArea({
   const [isMuted, setIsMuted] = useState(false);
   const [floatingEmojis, setFloatingEmojis] = useState([]);
   const [playerReady, setPlayerReady] = useState(false);
+  const [html5Video, setHtml5Video] = useState(null);
   const [showReactions, setShowReactions] = useState(() => {
     return localStorage.getItem('watchpro_show_reactions') !== 'false';
   });
@@ -358,19 +422,14 @@ export default function VideoArea({
         overflow: 'hidden'
       }}>
 
-        {/* YouTube player container */}
+        {/* YT Player */}
         <div 
           ref={playerContainerRef} 
-          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1 }}
         />
 
-        {/* Invisible overlay to prevent non-host users from clicking YouTube's play button */}
-        {!isHost && !isMagnet && (
-          <div style={{ 
-            position: 'absolute', inset: 0, zIndex: 2, 
-            cursor: 'default' 
-          }} />
-        )}
+        {/* Ambient Glow behind video */}
+        <AmbientGlow playerRef={playerRef} isMagnet={isMagnet} videoEl={html5Video} />
 
         {isMagnet && (
           <div style={{ position: 'absolute', inset: 0, zIndex: 1 }}>
@@ -380,6 +439,7 @@ export default function VideoArea({
               isMuted={isMuted} 
               isHost={isHost}
               onReady={(videoEl) => {
+                setHtml5Video(videoEl);
                 setPlayerReady(true);
                 // Create a unified adapter so the Sync Guardian can control the HTML5 <video> exactly like YouTube
                 playerRef.current = {

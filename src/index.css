@@ -55,6 +55,30 @@
   --transition-slow: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+[data-mood="cyberpunk"] {
+  --accent: #8b5cf6;
+  --accent-bright: #a78bfa;
+  --accent-glow: rgba(139, 92, 246, 0.5);
+  --bg-primary: #050510;
+  --border-accent: rgba(167, 139, 250, 0.6);
+}
+
+[data-mood="emerald"] {
+  --accent: #059669;
+  --accent-bright: #34d399;
+  --accent-glow: rgba(52, 211, 153, 0.4);
+  --bg-primary: #020a05;
+  --border-accent: rgba(52, 211, 153, 0.6);
+}
+
+[data-mood="sunset"] {
+  --accent: #ea580c;
+  --accent-bright: #fb923c;
+  --accent-glow: rgba(251, 146, 60, 0.4);
+  --bg-primary: #0e0400;
+  --border-accent: rgba(251, 146, 60, 0.6);
+}
+
 /* ===== RESET ===== */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { font-size: 16px; scroll-behavior: smooth; }

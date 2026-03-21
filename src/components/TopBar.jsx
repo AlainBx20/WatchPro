@@ -88,6 +88,20 @@ export default function TopBar({
           </div>
 
           <AILiveVibe chatMessages={chatMessages} />
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 10px', borderRadius: 20, border: '1px solid var(--border)', background: 'var(--bg-glass)', cursor: 'pointer' }} 
+            onClick={() => {
+              const moods = ['standard', 'cyberpunk', 'emerald', 'sunset'];
+              const current = document.documentElement.getAttribute('data-mood') || 'standard';
+              const next = moods[(moods.indexOf(current) + 1) % moods.length];
+              document.documentElement.setAttribute('data-mood', next);
+              addToast({ type: 'success', icon: '🎨', title: 'Mood Changed', sub: `Switched to ${next.toUpperCase()} theme` });
+            }}
+            title="Change Room Mood"
+          >
+            <span style={{ fontSize: '0.9rem' }}>🎨</span>
+            <span style={{ fontSize: '0.7rem', fontWeight: 600 }}>MOOD</span>
+          </div>
         </div>
       </div>
 

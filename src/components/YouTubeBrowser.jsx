@@ -1,0 +1,226 @@
+import { useState, useEffect } from 'react';
+import { 
+  Search, X, Play, Youtube, Activity, Flame, Music, 
+  Gamepad2, Film, Star, Monitor, Tv, Clapperboard 
+} from 'lucide-react';
+import { generateYoutubeSearch } from '../services/gemini';
+
+const YOUTUBE_FEEDS = {
+  'Trending': [
+    { title: "Dune: Part Two | Official Trailer", channel: "Warner Bros. Pictures", id: "U2Qp5pL3ovA", duration: "3:01", views: "34M", url: "https://www.youtube.com/watch?v=U2Qp5pL3ovA" },
+    { title: "MrBeast - 100 Days Trapped", channel: "MrBeast", id: "5fg9B9Xh1MQ", duration: "18:22", views: "155M", url: "https://www.youtube.com/watch?v=5fg9B9Xh1MQ" },
+    { title: "Apple Vision Pro - First Impressions!", channel: "Marques Brownlee", id: "QMQxqvvXhxs", duration: "21:14", views: "8.2M", url: "https://www.youtube.com/watch?v=QMQxqvvXhxs" },
+    { title: "GTA VI - Movie Trailer", channel: "Rockstar Games", id: "QdBZY2fkU-0", duration: "1:30", views: "180M", url: "https://www.youtube.com/watch?v=QdBZY2fkU-0" },
+    { title: "Lofi Beats - Chill Garden", channel: "Lofi Studio", id: "jfKfPfyJRdk", duration: "LIVE", views: "1M+", url: "https://www.youtube.com/watch?v=jfKfPfyJRdk" },
+    { title: "Dune Soundtrack - Hans Zimmer", channel: "Zimmer Dev", id: "E6pQyitW_E8", duration: "8:44", views: "12M", url: "https://www.youtube.com/watch?v=E6pQyitW_E8" }
+  ],
+  'Music': [
+    { title: "lofi hip hop radio 📚", channel: "Lofi Girl", id: "jfKfPfyJRdk", duration: "LIVE", views: "1M+", url: "https://www.youtube.com/watch?v=jfKfPfyJRdk" },
+    { title: "synthwave radio 🌌", channel: "Lofi Girl", id: "4xDzrJKXOOY", duration: "LIVE", views: "200K+", url: "https://www.youtube.com/watch?v=4xDzrJKXOOY" },
+    { title: "Interstellar Main Theme", channel: "Hans Zimmer", id: "IDsCtDRV2lg", duration: "12:15", views: "45M", url: "https://www.youtube.com/watch?v=IDsCtDRV2lg" }
+  ]
+};
+
+const MOVIE_GENRES = ['popular', 'action', 'sci-fi', 'horror', 'romance', 'animation'];
+
+export default function ContentBrowser({ onSelect, onClose }) {
+  const [browserMode, setBrowserMode] = useState('youtube'); // 'youtube' or 'movies'
+  const [activeTab, setActiveTab] = useState('Trending');
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState(null);
+  const [isSearching, setIsSearching] = useState(false);
+  const [moviesCache, setMoviesCache] = useState({});
+
+  // Fetch movies helper with proxy
+  const fetchMovies = async (genre = 'popular', searchQuery = '') => {
+    setIsSearching(true);
+    try {
+      // Use api.allorigins.win to bypass potential DNS/CORS blocks on yts.mx
+      let target = `https://yts.mx/api/v2/list_movies.json?limit=24&sort_by=${searchQuery ? 'title' : 'download_count'}`;
+      if (searchQuery) target += `&query_term=${encodeURIComponent(searchQuery)}`;
+      if (genre && genre !== 'popular' && !searchQuery) target += `&genre=${genre}`;
+      
+      const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(target)}`;
+      const res = await fetch(proxyUrl);
+      const data = await res.json();
+      
+      if (data.status === 'ok' && data.data.movies) {
+        const formatted = data.data.movies.map(m => ({
+          type: 'movie',
+          id: m.id,
+          title: m.title,
+          year: m.year,
+          rating: m.rating,
+          thumbnail: m.medium_cover_image,
+          summary: m.summary,
+          torrents: m.torrents,
+          url: m.url // temporary
+        }));
+        if (searchQuery) setResults(formatted);
+        else setResults(formatted);
+      }
+    } catch (err) {
+      console.warn("Movie fetch failed, likely proxy or site down.", err);
+      if (searchQuery) setResults([]);
+    }
+    setIsSearching(false);
+  };
+
+  useEffect(() => {
+    if (browserMode === 'movies') {
+      fetchMovies(activeTab.toLowerCase());
+    } else {
+      setResults(null);
+    }
+  }, [browserMode, activeTab]);
+
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    if (!query.trim()) {
+      setResults(null);
+      return;
+    }
+    
+    setIsSearching(true);
+    if (browserMode === 'youtube') {
+      try {
+        const aiResults = await generateYoutubeSearch(query);
+        setResults(aiResults?.map(r => ({ ...r, type: 'youtube' })) || []);
+      } catch (e) { setResults([]); }
+    } else {
+      await fetchMovies('popular', query);
+    }
+    setIsSearching(false);
+  };
+
+  const handleSelect = (item) => {
+    if (item.type === 'movie' || (browserMode === 'movies' && item.torrents)) {
+      const torrent = item.torrents.find(t => t.quality === '1080p') || item.torrents[0];
+      const trackers = [
+        'udp://open.demonii.com:1337/announce',
+        'udp://tracker.openbittorrent.com:80',
+        'udp://tracker.coppersurfer.tk:6969'
+      ].map(t => `&tr=${encodeURIComponent(t)}`).join('');
+      const magnet = `magnet:?xt=urn:btih:${torrent.hash}&dn=${encodeURIComponent(item.title)}${trackers}`;
+      onSelect(magnet);
+    } else {
+      onSelect(item.url);
+    }
+    onClose();
+  };
+
+  return (
+    <div className="modal-overlay animate-fadeIn" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(12px)' }}>
+      <div className="modal-content animate-slideUp" style={{ width: '92%', maxWidth: 1100, height: '88vh', background: 'var(--bg-card)', borderRadius: '28px', display: 'flex', flexDirection: 'column', overflow: 'hidden', border: '1px solid var(--border)', boxShadow: '0 30px 60px -12px rgba(0,0,0,0.8)' }}>
+        
+        {/* Top Navbar: Mode Switch */}
+        <div style={{ display: 'flex', background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid var(--border)' }}>
+          <button 
+            onClick={() => { setBrowserMode('youtube'); setActiveTab('Trending'); setResults(null); }}
+            style={{ 
+              flex: 1, padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+              fontSize: '0.9rem', fontWeight: 700, color: browserMode === 'youtube' ? 'var(--accent-bright)' : 'var(--text-muted)',
+              background: browserMode === 'youtube' ? 'rgba(124,58,237,0.1)' : 'transparent',
+              borderBottom: `2px solid ${browserMode === 'youtube' ? 'var(--accent-bright)' : 'transparent'}`,
+              transition: 'all 0.2s'
+            }}
+          >
+            <Youtube size={18} /> YouTube
+          </button>
+          <button 
+            onClick={() => { setBrowserMode('movies'); setActiveTab('Popular'); setResults(null); }}
+            style={{ 
+              flex: 1, padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+              fontSize: '0.9rem', fontWeight: 700, color: browserMode === 'movies' ? '#10b981' : 'var(--text-muted)',
+              background: browserMode === 'movies' ? 'rgba(16,185,129,0.1)' : 'transparent',
+              borderBottom: `2px solid ${browserMode === 'movies' ? '#10b981' : 'transparent'}`,
+              transition: 'all 0.2s'
+            }}
+          >
+            <Clapperboard size={18} /> Movies & TV
+          </button>
+        </div>
+
+        {/* Header Options */}
+        <div style={{ padding: '20px 32px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 20 }}>
+          <form onSubmit={handleSearch} style={{ flex: 1, position: 'relative', display: 'flex', alignItems: 'center' }}>
+            <Search size={18} style={{ position: 'absolute', left: 16, color: 'var(--text-muted)' }} />
+            <input 
+              autoFocus
+              value={query} onChange={e => setQuery(e.target.value)}
+              placeholder={browserMode === 'youtube' ? "Search YouTube..." : "Search Movies & Series..."}
+              style={{ width: '100%', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border)', padding: '12px 16px 12px 46px', borderRadius: '100px', fontSize: '0.95rem', color: '#fff', outline: 'none' }}
+            />
+            {query && <X size={16} style={{ position: 'absolute', right: 16, cursor: 'pointer', color: 'var(--text-muted)' }} onClick={() => {setQuery(''); setResults(null);}} />}
+          </form>
+
+          <button className="icon-btn" onClick={onClose} style={{ background: 'rgba(255,255,255,0.05)' }}><X size={20} /></button>
+        </div>
+
+        {/* Sub-Tabs */}
+        {!results && (
+          <div className="hide-scroll" style={{ padding: '0 32px', display: 'flex', gap: 20, borderBottom: '1px solid var(--border)', overflowX: 'auto' }}>
+            {(browserMode === 'youtube' ? Object.keys(YOUTUBE_FEEDS) : MOVIE_GENRES).map(tab => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                style={{
+                  padding: '14px 0', fontSize: '0.85rem', fontWeight: 600, textTransform: 'capitalize',
+                  color: activeTab === tab ? '#fff' : 'var(--text-muted)',
+                  borderBottom: `2px solid ${activeTab === tab ? (browserMode === 'youtube' ? 'var(--accent)' : '#10b981') : 'transparent'}`
+                }}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Grid */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: 32 }}>
+          {isSearching ? (
+             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 15 }}>
+               <div className="loader-ring" style={{ borderTopColor: browserMode === 'youtube' ? 'var(--accent)' : '#10b981' }}></div>
+               <div style={{ color: 'var(--text-muted)' }}>Searching {browserMode}...</div>
+             </div>
+          ) : (results || YOUTUBE_FEEDS[activeTab] || []).length > 0 ? (
+            <div style={{ display: 'grid', gridTemplateColumns: `repeat(auto-fill, minmax(${browserMode === 'movies' ? '160px' : '280px'}, 1fr))`, gap: 24 }}>
+              {(results || (browserMode === 'youtube' ? YOUTUBE_FEEDS[activeTab] : [])).map((item, i) => (
+                <div 
+                  key={i} 
+                  className="media-card group"
+                  onClick={() => handleSelect(item)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <div style={{ 
+                    position: 'relative', width: '100%', 
+                    aspectRatio: browserMode === 'movies' && !results?.some(r=>r.type==='youtube') ? '2/3' : '16/9', 
+                    borderRadius: 16, overflow: 'hidden', background: '#111' 
+                  }}>
+                    <img src={item.thumbnail || `https://i.ytimg.com/vi/${item.id}/hq720.jpg`} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', opacity: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }} className="group-hover:opacity-100">
+                       <Play fill="#fff" size={32} />
+                    </div>
+                    {item.rating && (
+                       <div style={{ position: 'absolute', top: 10, right: 10, background: 'rgba(0,0,0,0.7)', padding: '2px 6px', borderRadius: 6, fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: 4, color: '#fbbf24' }}>
+                         <Star size={10} fill="currentColor" /> {item.rating}
+                       </div>
+                    )}
+                  </div>
+                  <div style={{ marginTop: 10 }}>
+                    <h3 style={{ fontSize: '0.85rem', fontWeight: 700, margin: 0, color: '#fff' }}>{item.title}</h3>
+                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: '4px 0 0' }}>{item.channel || item.year}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div style={{ textAlign: 'center', marginTop: 100, color: 'var(--text-muted)' }}>
+              No content found. Please try a different category or search query.
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

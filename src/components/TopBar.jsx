@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
-import { Share2, Settings as SettingsIcon, Users, Tv, X, LogOut, CheckCircle, Navigation, Search, Copy, Link2, QrCode } from 'lucide-react';
+import { Share2, Settings as SettingsIcon, Users, Tv, X, LogOut, CheckCircle, Navigation, Search, Copy, Link2, QrCode, Compass } from 'lucide-react';
 import AILiveVibe from './AILiveVibe';
+import ContentBrowser from './YouTubeBrowser';
 
 export default function TopBar({
   appState, panelOpen, setPanelOpen, outOfSync, roomName,
   onOpenSettings, onOpenRecap, addToast, onUrlChange, isHost, chatMessages, onLeaveRoom
 }) {
   const [showInvite, setShowInvite] = useState(false);
+  const [showBrowser, setShowBrowser] = useState(false);
   const [linkInput, setLinkInput] = useState('');
   const [copied, setCopied] = useState(false);
   const [latency, setLatency] = useState(24);
@@ -35,10 +37,17 @@ export default function TopBar({
 
   const handleLinkSubmit = (e) => {
     e.preventDefault();
-    if (linkInput.trim()) {
-      onUrlChange(linkInput.trim());
-      addToast({ type: 'success', icon: '✨', title: 'Video Changed', sub: 'Loading new video...' });
+    const val = linkInput.trim();
+    if (!val) return;
+
+    // If it looks like a URL or Magnet, update directly
+    if (val.includes('youtube.com') || val.includes('youtu.be') || val.startsWith('magnet:')) {
+      onUrlChange(val);
+      addToast({ type: 'success', icon: '✨', title: 'Video Changed', sub: 'Loading link...' });
       setLinkInput('');
+    } else {
+      // Otherwise, open the browser and trigger search
+      setShowBrowser(true);
     }
   };
 
@@ -85,27 +94,38 @@ export default function TopBar({
       {/* Center - URL Input (Host only) or viewing indicator */}
       <div style={{ flex: 1, display: 'flex', justifyContent: 'center', padding: '0 20px', zIndex: 10 }}>
         {isHost ? (
-          <form onSubmit={handleLinkSubmit} style={{ display: 'flex', width: '100%', maxWidth: 420, position: 'relative', pointerEvents: 'auto' }}>
-            <Search size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-            <input 
-              placeholder="Paste YouTube Link or Search..."
-              value={linkInput}
-              onChange={(e) => setLinkInput(e.target.value)}
-              style={{ 
-                width: '100%', 
-                padding: '8px 14px 8px 36px', 
-                fontSize: '0.83rem', 
-                borderRadius: 30,
-                border: '1px solid var(--border)',
-                background: 'var(--bg-tertiary)',
-                cursor: 'text',
-                color: '#ffffff',
-                transition: 'border-color 0.2s ease',
-                outline: 'none'
-              }}
-              onFocus={e => e.target.style.borderColor = 'var(--accent-bright)'}
-              onBlur={e => e.target.style.borderColor = 'var(--border)'}
-            />
+          <form onSubmit={handleLinkSubmit} style={{ display: 'flex', width: '100%', maxWidth: 480, position: 'relative', pointerEvents: 'auto', gap: 8 }}>
+            <div style={{ position: 'relative', flex: 1 }}>
+              <Search size={14} style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+              <input 
+                placeholder="Paste Link or Search Content..."
+                value={linkInput}
+                onChange={(e) => setLinkInput(e.target.value)}
+                style={{ 
+                  width: '100%', 
+                  padding: '10px 14px 10px 40px', 
+                  fontSize: '0.86rem', 
+                  borderRadius: 30,
+                  border: '1px solid var(--border)',
+                  background: 'var(--bg-tertiary)',
+                  cursor: 'text',
+                  color: '#ffffff',
+                  transition: 'all 0.2s ease',
+                  outline: 'none'
+                }}
+                onFocus={e => e.target.style.borderColor = 'var(--accent-bright)'}
+                onBlur={e => e.target.style.borderColor = 'var(--border)'}
+              />
+            </div>
+            <button 
+              type="button"
+              className="btn-primary" 
+              onClick={() => setShowBrowser(true)}
+              style={{ padding: '0 20px', borderRadius: 30, fontSize: '0.85rem', flexShrink: 0, gap: 6 }}
+            >
+              <Compass size={16} />
+              Browse
+            </button>
           </form>
         ) : (
           <div style={{ 
@@ -125,6 +145,7 @@ export default function TopBar({
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
         <button
           className={`icon-btn ${!panelOpen ? 'active' : ''}`}
+
           onClick={() => setPanelOpen(!panelOpen)}
           title="Toggle Participants"
         >
@@ -285,6 +306,23 @@ export default function TopBar({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Unified Content Browser Modal */}
+      {showBrowser && (
+        <ContentBrowser 
+          onClose={() => setShowBrowser(false)}
+          onSelect={(url) => {
+            onUrlChange(url);
+            const isMagnet = url.startsWith('magnet:');
+            addToast({ 
+              type: 'success', 
+              icon: isMagnet ? '🍿' : '✨', 
+              title: isMagnet ? 'Movie Selected' : 'Video Selected', 
+              sub: isMagnet ? 'Connecting to P2P Swarm...' : 'Loading new video...' 
+            });
+          }}
+        />
       )}
     </header>
   );

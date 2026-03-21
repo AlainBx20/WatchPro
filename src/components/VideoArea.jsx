@@ -4,6 +4,8 @@ import {
   RefreshCw, PictureInPicture2, Zap, ZapOff
 } from 'lucide-react';
 import { formatTime } from '../hooks/useWatchParty';
+import WebTorrentPlayer from './WebTorrentPlayer';
+
 
 /**
  * Extract YouTube video ID from any URL format
@@ -94,7 +96,8 @@ export default function VideoArea({
   const progressInterval = useRef(null);
   const ignoreStateChange = useRef(false);
 
-  const videoId = extractYouTubeId(url);
+  const isMagnet = url?.startsWith('magnet:');
+  const videoId = isMagnet ? null : extractYouTubeId(url);
   const videoIdRef = useRef(videoId);
   const hostSyncInterval = useRef(null);
 
@@ -362,15 +365,46 @@ export default function VideoArea({
         />
 
         {/* Invisible overlay to prevent non-host users from clicking YouTube's play button */}
-        {!isHost && (
+        {!isHost && !isMagnet && (
           <div style={{ 
             position: 'absolute', inset: 0, zIndex: 2, 
             cursor: 'default' 
           }} />
         )}
 
+        {isMagnet && (
+          <div style={{ position: 'absolute', inset: 0, zIndex: 1 }}>
+            <WebTorrentPlayer 
+              url={url} 
+              volume={volume} 
+              isMuted={isMuted} 
+              isHost={isHost}
+              onReady={(videoEl) => {
+                setPlayerReady(true);
+                // Create a unified adapter so the Sync Guardian can control the HTML5 <video> exactly like YouTube
+                playerRef.current = {
+                  getCurrentTime: () => videoEl.currentTime,
+                  getDuration: () => videoEl.duration,
+                  getPlayerState: () => videoEl.paused ? 2 : 1, // 1=playing, 2=paused
+                  seekTo: (sec) => { videoEl.currentTime = sec; },
+                  playVideo: () => { videoEl.play().catch(e=>console.log(e)); },
+                  pauseVideo: () => { videoEl.pause(); },
+                  mute: () => { videoEl.muted = true; },
+                  unMute: () => { videoEl.muted = false; },
+                  setVolume: (val) => { videoEl.volume = val / 100; }
+                };
+              }}
+              onStateChange={onStateChange}
+              onDurationUpdate={setLocalDuration}
+              onProgressUpdate={(t) => {
+                setLocalProgress(t);
+              }}
+            />
+          </div>
+        )}
+
         {/* Empty state when no video */}
-        {!videoId && (
+        {!videoId && !isMagnet && (
           <div style={{
             position: 'absolute', inset: 0, zIndex: 3,
             display: 'flex', flexDirection: 'column',

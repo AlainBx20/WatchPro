@@ -118,3 +118,36 @@ Return ONLY a valid JSON array matching exactly this schema, no markdown blocks:
   } catch(e) { return []; }
 }
 
+export async function generateYoutubeSearch(query) {
+  if (!query) return [];
+  
+  const ai = getGeminiClient();
+  const systemPrompt = `You are a YouTube Search API proxy. The user searched for: "${query}".
+Return ONLY a valid JSON array of 6 real, highly relevant YouTube video IDs that actually exist on YouTube.
+Schema:
+[
+  {
+    "id": "real_11_char_id",
+    "title": "Exact Title of the video",
+    "channel": "Channel Name",
+    "duration": "10:35",
+    "views": "1.2M views"
+  }
+]
+No markdown blocks, just the raw JSON array. Make sure the IDs are valid.`;
+
+  try {
+    const res = await ai.models.generateContent({ model: 'gemini-2.5-flash', contents: systemPrompt });
+    const cleanText = res.text.replace(/```json/gi, '').replace(/```/g, '').trim();
+    const items = JSON.parse(cleanText);
+    
+    return items.map(item => ({
+      ...item,
+      url: `https://www.youtube.com/watch?v=${item.id}`,
+      thumbnail: `https://i.ytimg.com/vi/${item.id}/hq720.jpg`
+    }));
+  } catch(e) { 
+    console.warn("AI Search Failed:", e);
+    return []; 
+  }
+}

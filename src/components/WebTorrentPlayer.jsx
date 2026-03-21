@@ -26,19 +26,32 @@ export default function WebTorrentPlayer({
     }
 
     if (!wtClient) {
-      wtClient = new window.WebTorrent();
+      wtClient = new window.WebTorrent({
+        tracker: {
+          rtcConfig: {
+            iceServers: [
+              { urls: 'stun:stun.l.google.com:19302' },
+              { urls: 'stun:global.stun.twilio.com:3478?transport=udp' }
+            ]
+          }
+        }
+      });
     }
     
     // Cleanup any existing torrents before adding new
     wtClient.torrents.forEach(t => t.destroy());
 
-    // High-performance WebSocket trackers for browser-based WebTorrent
+    // Massively expanded high-performance WebSocket trackers list
     const announce = [
       'wss://tracker.openwebtorrent.com',
       'wss://tracker.btorrent.xyz',
       'wss://tracker.files.fm:7073/announce',
       'wss://tracker.gbitt.info',
-      'wss://tracker.webtorrent.dev'
+      'wss://tracker.webtorrent.dev',
+      'wss://tracker.polyane.ovh',
+      'wss://tracker.fastcast.nz',
+      'wss://tracker.swateam.org.uk:443/announce',
+      'wss://tracker.archive.org:443/announce'
     ];
 
     setLoadingMsg('Resolving Magnet Metadata...');

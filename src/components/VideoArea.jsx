@@ -160,8 +160,9 @@ export default function VideoArea({
   const progressInterval = useRef(null);
   const ignoreStateChange = useRef(false);
 
-  const isMagnet = url?.startsWith('magnet:');
-  const videoId = isMagnet ? null : extractYouTubeId(url);
+  // Detection logic for P2P content (Magnet or direct .torrent URL)
+  const isTorrent = url?.startsWith('magnet:') || url?.toLowerCase().endsWith('.torrent');
+  const videoId = isTorrent ? null : extractYouTubeId(url);
   const videoIdRef = useRef(videoId);
   const hostSyncInterval = useRef(null);
 
@@ -249,7 +250,7 @@ export default function VideoArea({
             disablekb: 1,
             modestbranding: 1,
             rel: 0,
-            fs: 0,
+            fs: 1,
             iv_load_policy: 3, // No annotations
             playsinline: 1,
           },
@@ -342,6 +343,31 @@ export default function VideoArea({
     } catch(e) {}
   }, [volume, isMuted, playerReady]);
 
+  // Sync fullscreen state
+  useEffect(() => {
+    const handleFsChange = () => {
+      // The `toggleFullscreen` prop is a function to toggle, not set.
+      // We need to ensure the parent's `isFullscreen` state is updated.
+      // Assuming `toggleFullscreen` from props handles the actual state update in parent.
+      // If the user exits fullscreen via ESC, the parent's state needs to be notified.
+      // The `toggleFullscreen` prop should ideally be `setIsFullscreen` or similar.
+      // For now, we'll just call the prop's `toggleFullscreen` if the state is out of sync.
+      // A better approach would be to pass `setIsFullscreen` as a prop.
+      if (isFullscreen !== !!document.fullscreenElement) {
+        // This means the fullscreen state changed externally (e.g., ESC key)
+        // and our parent component's `isFullscreen` prop is now out of sync.
+        // We need a way to tell the parent to update its state.
+        // Since `toggleFullscreen` is the only prop related to fullscreen control,
+        // we'll call it, assuming it will correctly update the parent's state.
+        // This is a bit of a hack if `toggleFullscreen` only *toggles* and doesn't *set*.
+        // A more robust solution would be to pass a `setFullscreenState` prop.
+        toggleFullscreen(); // Call the prop to sync parent state
+      }
+    };
+    document.addEventListener('fullscreenchange', handleFsChange);
+    return () => document.removeEventListener('fullscreenchange', handleFsChange);
+  }, [isFullscreen, toggleFullscreen]);
+
   /* Auto-hide controls */
   const revealControls = useCallback(() => {
     setShowControls(true);
@@ -429,9 +455,9 @@ export default function VideoArea({
         />
 
         {/* Ambient Glow behind video */}
-        <AmbientGlow playerRef={playerRef} isMagnet={isMagnet} videoEl={html5Video} />
+        <AmbientGlow playerRef={playerRef} isMagnet={isTorrent} videoEl={html5Video} />
 
-        {isMagnet && (
+        {isTorrent && (
           <div style={{ position: 'absolute', inset: 0, zIndex: 1 }}>
             <WebTorrentPlayer 
               url={url} 
@@ -464,7 +490,7 @@ export default function VideoArea({
         )}
 
         {/* Empty state when no video */}
-        {!videoId && !isMagnet && (
+        {!videoId && !isTorrent && (
           <div style={{
             position: 'absolute', inset: 0, zIndex: 3,
             display: 'flex', flexDirection: 'column',
@@ -571,8 +597,9 @@ export default function VideoArea({
             </div>
 
             {/* Controls row */}
-            <div className="controls-row" style={{ marginTop: 12 }}>
-              <div className="controls-left">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 15, width: '100%' }}>
+              
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <button
                   className="play-btn"
                   onClick={(e) => { 
@@ -581,26 +608,28 @@ export default function VideoArea({
                       onStateChange(appState === 'playing' ? 'paused' : 'playing'); 
                     }
                   }}
-                  style={{ opacity: isHost ? 1 : 0.5, cursor: isHost ? 'pointer' : 'not-allowed' }}
+                  style={{ opacity: isHost ? 1 : 0.5, cursor: isHost ? 'pointer' : 'not-allowed', width: 48, height: 48 }}
                 >
-                  {appState === 'playing' ? <Pause size={20} /> : <Play size={20} />}
+                  {appState === 'playing' ? <Pause size={24} fill="#fff" /> : <Play size={24} fill="#fff" />}
                 </button>
-                <div className="volume-wrap" style={{ marginLeft: 8 }}>
-                  <button className="icon-btn" onClick={(e) => { e.stopPropagation(); setIsMuted(!isMuted); }}>
-                    {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+                
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(0,0,0,0.4)', padding: '8px 16px', borderRadius: 100, border: '1px solid rgba(255,255,255,0.1)' }}>
+                  <button className="icon-btn" style={{ padding: 0, width: 'auto', height: 'auto' }} onClick={(e) => { e.stopPropagation(); setIsMuted(!isMuted); }}>
+                    {isMuted ? <VolumeX size={18} color="#fff" /> : <Volume2 size={18} color="#fff" />}
                   </button>
                   <input
                     className="volume-slider" type="range" min={0} max={100}
                     value={isMuted ? 0 : volume}
                     onChange={e => { e.stopPropagation(); setVolume(+e.target.value); }}
                     onClick={e => e.stopPropagation()}
+                    style={{ width: 80 }}
                   />
                 </div>
               </div>
 
-              <div className="controls-center">
+              <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
                 {!isHost && (
-                  <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.6)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.7)', display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(0,0,0,0.4)', padding: '6px 14px', borderRadius: 100 }}>
                     <span>👑</span> Host controls playback
                   </div>
                 )}
@@ -608,16 +637,27 @@ export default function VideoArea({
                   <button
                     className={`follow-host-toggle ${followHost ? '' : 'off'}`}
                     onClick={(e) => { e.stopPropagation(); setFollowHost(!followHost); }}
+                    style={{ padding: '8px 16px', fontSize: '0.8rem' }}
                   >
-                    <RefreshCw size={12} />
+                    <RefreshCw size={14} />
                     {followHost ? 'Following Host' : 'Follow Host'}
                   </button>
                 )}
               </div>
 
-              <div className="controls-right">
-                <button className="icon-btn" onClick={(e) => { e.stopPropagation(); toggleFullscreen(); }}>
-                  {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 15, marginRight: 70 }}>
+                <button 
+                  className="icon-btn" 
+                  onClick={(e) => { e.stopPropagation(); toggleFullscreen(); }}
+                  style={{ 
+                    background: 'rgba(255,255,255,0.1)', 
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    width: 44, height: 44, borderRadius: 12,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    color: '#fff', cursor: 'pointer', transition: 'all 0.2s'
+                  }}
+                >
+                  {isFullscreen ? <Minimize2 size={22} strokeWidth={2.5} /> : <Maximize2 size={22} strokeWidth={2.5} />}
                 </button>
               </div>
             </div>

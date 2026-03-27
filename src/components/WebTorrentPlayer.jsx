@@ -15,6 +15,7 @@ export default function WebTorrentPlayer({
   const [downloadSpeed, setDownloadSpeed] = useState('0 KB/s');
   const [peers, setPeers] = useState(0);
   const [isReady, setIsReady] = useState(false);
+  const [errorStatus, setErrorStatus] = useState(null);
 
   useEffect(() => {
     if (!url || !url.startsWith('magnet:')) return;
@@ -41,7 +42,7 @@ export default function WebTorrentPlayer({
     // Cleanup any existing torrents before adding new
     wtClient.torrents.forEach(t => t.destroy());
 
-    // Massively expanded high-performance WebSocket trackers list
+    // Aggressive & modern high-performance tracker list to ensure connectivity
     const announce = [
       'wss://tracker.openwebtorrent.com',
       'wss://tracker.btorrent.xyz',
@@ -51,11 +52,14 @@ export default function WebTorrentPlayer({
       'wss://tracker.polyane.ovh',
       'wss://tracker.fastcast.nz',
       'wss://tracker.swateam.org.uk:443/announce',
-      'wss://tracker.archive.org:443/announce'
+      'wss://tracker.archive.org:443/announce',
+      'wss://tracker.novage.com.ua:443/announce',
+      'wss://tracker.lineageos.org:443/announce'
     ];
 
     setLoadingMsg('Resolving Magnet Metadata...');
     setIsReady(false);
+    setErrorStatus(null);
     
     // Auto-append trackers to the magnet URL if they aren't there
     let refinedUrl = url;
@@ -65,7 +69,16 @@ export default function WebTorrentPlayer({
       }
     });
 
+    // Timeout if we can't find any peers to get metadata from
+    const resolutionTimeout = setTimeout(() => {
+      if (!isReady && peers === 0) {
+        setLoadingMsg('Resolution Timeout');
+        setErrorStatus('Unable to find WebTorrent peers for this movie. The swarm might be BitTorrent-only or dead.');
+      }
+    }, 25000);
+
     const torrent = wtClient.add(refinedUrl, (torrent) => {
+      clearTimeout(resolutionTimeout);
       // Torrent is ready to be streamed
       setLoadingMsg('Mounting Stream...');
       
@@ -139,13 +152,22 @@ export default function WebTorrentPlayer({
       
       {!isReady && (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}>
-          <div className="loader-ring" style={{ width: 50, height: 50, borderTopColor: '#10b981' }}></div>
-          <div style={{ fontSize: '1.2rem', fontWeight: 700, color: '#fff' }}>{loadingMsg}</div>
-          <div style={{ display: 'flex', gap: 16, fontSize: '0.85rem', color: '#10b981', background: 'rgba(16,185,129,0.1)', padding: '6px 16px', borderRadius: 20 }}>
-            <span>↓ {downloadSpeed}</span>
-            <span>•</span>
-            <span>👥 {peers} Peers</span>
-          </div>
+          {errorStatus ? (
+            <div style={{ maxWidth: 450, textAlign: 'center', padding: 20 }}>
+              <div style={{ color: '#ef4444', fontSize: '1.2rem', fontWeight: 800, marginBottom: 12 }}>⚠️ {loadingMsg}</div>
+              <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.9rem', lineHeight: 1.6 }}>{errorStatus}</p>
+            </div>
+          ) : (
+            <>
+              <div className="loader-ring" style={{ width: 50, height: 50, borderTopColor: '#10b981' }}></div>
+              <div style={{ fontSize: '1.2rem', fontWeight: 700, color: '#fff' }}>{loadingMsg}</div>
+              <div style={{ display: 'flex', gap: 16, fontSize: '0.85rem', color: '#10b981', background: 'rgba(16,185,129,0.1)', padding: '6px 16px', borderRadius: 20 }}>
+                <span>↓ {downloadSpeed}</span>
+                <span>•</span>
+                <span>👥 {peers} Peers</span>
+              </div>
+            </>
+          )}
         </div>
       )}
 

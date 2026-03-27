@@ -16,3 +16,10 @@ exports.onChatMessage = chatTrigger.onChatMessage;
 // Rejoin Recap Export
 const recapApi = require('./src/api/recap.api');
 exports.generateRejoinRecap = recapApi.generateRejoinRecap;
+
+// AI & Content Proxy Exports
+const aiApi = require('./src/api/ai.api');
+exports.proxyOllama = aiApi.proxyOllama;
+exports.proxyMovieRecommendations = aiApi.proxyMovieRecommendations;
+exports.proxyYoutube = aiApi.proxyYoutube;
+exports.proxyMovies = aiApi.proxyMovies;

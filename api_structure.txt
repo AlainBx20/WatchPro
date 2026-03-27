@@ -1,0 +1,97 @@
+TRENDING ITEM:
+{
+  "type": "video",
+  "videoId": "XelMqi0jlvk",
+  "title": "Christmas Songs Playlist🎄Top 2 Hour Christmas Songs 🎅 Best Christmas Music 2026",
+  "channelTitle": "Christmas Songs and Carols - Love to Sing",
+  "channelId": "UCn0JHLJWiO3_Y5xfNPcF_Ug",
+  "channelThumbnail": null,
+  "description": "# Christmas Songs Playlist 🎄 Top 2 Hour Christmas Songs 🎅 Best Christmas Music 2026\n\nEnjoy the festive classic Top Christmas Songs of All Time playlist! This cheerful top Christmas music mix is perfect for singing along, bringing joy and holiday spirit to any celebration. Whether you’re at a Christmas party, cozying up with family, or in the classroom, our best Christmas Songs of All Time playlist if full of timeless Christmas tunes that everyone loves. Let the fun melody and catchy chorus bring smiles and create a cozy holiday atmosphere!\n\nHoliday hits for 2025 featuring all the best and popular Christmas songs you love with lyrics to sing along and get you into the Christmas spirit 🎅  A Merry Christmas music playlist guaranteed to fill your heart with Christmas joy! A perfect mix of Christmas music to share with family and friends for a Merry Yuletide Christmas 🎄\n\n## Top Christmas Songs of All Time Playlist:\n00:00:00 All I Want For Christmas Is You\n00:04:03 Santa Claus is Coming to Town\n00:07:02 Please Come Home For Christmas\n00:09:49 Rockin' Around the Christmas Tree\n00:11:54 Holly Jolly Christmas\n00:13:47 Feliz Navidad\n00:17:40 Merry Christmas Everyone\n00:21:12 Last Christmas\n00:25:41 It's the Most Wonderful Time of the Year\n00:28:05 Jingle Bell Rock\n00:30:22 Let it Snow\n00:32:41 O Christmas Tree\n00:34:51 Rudolph the Red Nosed Reindeer\n00:36:16 Ting a Ling a Jingle\n00:39:01 Christmas Alphabet\n00:41:12 Christmas Holiday Medley\n00:45:00 I'm the Happiest Christmas Tree\n00:47:08 Have Yourself a Merry Little Christmas\n00:50:57 Jolly Old Saint Nicholas\n00:52:43 The BER Song\n00:55:32 O Come All Ye Faithful\n00:58:02 Joy to the World\n00:59:51 Silent Night\n01:03:26 12 Days of Christmas\n01:07:38 Deck the Halls\n01:09:39 Jingle Bells\n01:11:17 Religious Medley\n01:17:34 Away in a Manger\n01:19:30 Auld Lang Syne\n01:24:22 We Wish You a Merry Christmas\n01:26:27 Angels From the Realms of Glory\n01:29:07 Children Go Where I Send Thee\n01:33:06 Christ was Born on Christmas Day\n01:35:37 Ding Dong Merrily on High\n01:37:33 Go Tell it on the Mountain\n01:40:21 God Rest You Merry Gentlemen\n01:44:55 Good King Wenceslas\n01:47:55 Grandma Got Runover By a Reindeer\n01:51:26 Here We Come a Carolling\n01:53:37 How Great Thou Art\n01:58:33 It Came Upon a Midnight Clear\n02:02:04 Jolly Old Saint Nicholas\n02:03:53 O Come O Come Emmanuel\n\nChristmas Songs and Carols Love to Sing is your go-to destination for Top Christmas Songs and Carols that are joyful, sing-along music that brings people together! We create the best Christmas songs and carols on the internet, Love to Sing offers a wide range of festive and family-friendly music that lifts spirits and spreads holiday cheer. Whether it’s for a Christmas celebration, a Christmas gathering, or simply enjoying the magic of the Christmas season, Christmas Songs and Carols Love to Sing’s Top Christmas Songs will have everyone singing along! 🎶❤️ \n\nListen to the top Jingle Bells Christmas Song on YouTube - Love to Sing Jingle Bells https://www.youtube.com/watch?v=3CWJNqyub3o 🔔 Over 200 Million views! \n\nWe Wish You a Merry Christmas https://www.youtube.com/watch?v=g-OF7KGyDis it's the top version on YouTube🎄 \n\nCheck out our 12 Days of Christmas https://www.youtube.com/watch?v=oyEyMjdD2uk 🎅 \n\nSing along with the Best Feliz Navidad of all time! https://www.youtube.com/watch?v=YNGsde7zWzw\n\nTop 90 Christmas Songs Playlist https://www.youtube.com/watch?v=M51fAus2Vnc\n\n🎵 Subscribe: http://www.youtube.com/c/ChristmasSongsandCarolsLovetoSing?sub_confirmation=1 \n\n*Listen to Love to Sing on streaming platforms*\n\nSpotify: https://open.spotify.com/artist/5dz42IMRAYRfEn0igXDjoz?si=B3u0krOjSyWBff0KzOVFMw&dl_branch=1     \n\nYouTube Music: https://music.youtube.com/channel/UCjDkTzwSifCid5vl3gLtfbQ\n\nApple Music: https://music.apple.com/us/artist/love-to-sing/351051489\n\n#christmassongs\n#christmasmusic\n#christmassongsandcarols\n#christmasplaylist\n\n*Follow us on social media*\nTiktok: https://www.tiktok.com/@christmassongsandcarols\nFacebook: https://www.facebook.com/christmassongsandcarols\nInstagram: https://www.instagram.com/christmassongsandcarols/\nTwitter: https://x.com/SongsCarols\n\nFeel the Christmas JOY with Christmas Songs and Carols - Love to Sing\n© Love to Sing Ltd",
+  "viewCount": "316056",
+  "likeCount": "1117",
+  "commentCount": "61",
+  "publishedAt": "2025-12-09T11:30:38Z",
+  "publishedTimeText": "4 months ago",
+  "lengthText": "2:07:14",
+  "thumbnail": [
+    {
+      "url": "https://i.ytimg.com/vi/XelMqi0jlvk/default.jpg",
+      "width": 120,
+      "height": 90
+    },
+    {
+      "url": "https://i.ytimg.com/vi/XelMqi0jlvk/mqdefault.jpg",
+      "width": 320,
+      "height": 180
+    },
+    {
+      "url": "https://i.ytimg.com/vi/XelMqi0jlvk/hqdefault.jpg",
+      "width": 480,
+      "height": 360
+    },
+    {
+      "url": "https://i.ytimg.com/vi/XelMqi0jlvk/sddefault.jpg",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "url": "https://i.ytimg.com/vi/XelMqi0jlvk/maxresdefault.jpg",
+      "width": 1280,
+      "height": 720
+    }
+  ],
+  "richThumbnail": null
+}
+
+SEARCH ITEM:
+{
+  "type": "video",
+  "videoId": "68e9uzaA7OA",
+  "title": "Top Spotify Hits 2026 🍂 Pop Music 2026 -Trending Music 2026 🎶 New Pop & Latest Pop Songs",
+  "channelTitle": "Dynamic Deep House",
+  "channelId": "UCci3lozteCexkJ4g0xj-9NQ",
+  "channelHandle": "@DynamicDeepHouse",
+  "channelThumbnail": [
+    {
+      "url": "https://yt3.ggpht.com/0PnbakDJg5fFhkNl33icn0VkAw7pZ17hwBtZxc0N_BVV6NivQYdOawqTmg_ahmJNWqZy5bPZ=s68-c-k-c0x00ffffff-no-rj",
+      "width": 68,
+      "height": 68
+    }
+  ],
+  "channelAvatar": [
+    {
+      "url": "https://yt3.ggpht.com/0PnbakDJg5fFhkNl33icn0VkAw7pZ17hwBtZxc0N_BVV6NivQYdOawqTmg_ahmJNWqZy5bPZ=s68-c-k-c0x00ffffff-no-rj",
+      "width": 68,
+      "height": 68
+    }
+  ],
+  "description": "Top Spotify Hits 2026 Pop Music 2026 -Trending Music 2026 New Pop & Latest Pop Songs ...",
+  "viewCountText": "24,399 views",
+  "viewCount": "24399",
+  "publishedTimeText": "Streamed 1 day ago",
+  "publishDate": "2026-03-26",
+  "publishedAt": "2026-03-26T00:00:00Z",
+  "lengthText": "2:19:22",
+  "badges": [
+    "New"
+  ],
+  "thumbnail": [
+    {
+      "url": "https://i.ytimg.com/vi/68e9uzaA7OA/hq720.jpg?sqp=-oaymwEcCOgCEMoBSFXyq4qpAw4IARUAAIhCGAFwAcABBg==&rs=AOn4CLCOMxuknL09W5FCiT9n8VDBUHhitw",
+      "width": 360,
+      "height": 202
+    },
+    {
+      "url": "https://i.ytimg.com/vi/68e9uzaA7OA/hq720.jpg?sqp=-oaymwEcCNAFEJQDSFXyq4qpAw4IARUAAIhCGAFwAcABBg==&rs=AOn4CLBG55WcjanAoA9MRit7MGiGpZssug",
+      "width": 720,
+      "height": 404
+    }
+  ],
+  "richThumbnail": [
+    {
+      "url": "https://i.ytimg.com/an_webp/68e9uzaA7OA/mqdefault_6s.webp?du=3000&sqp=CODpmM4G&rs=AOn4CLBt4FaRJhtgnL3Bk1E71WL3NSX7bw",
+      "width": 320,
+      "height": 180
+    }
+  ]
+}

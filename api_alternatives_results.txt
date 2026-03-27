@@ -1,0 +1,14 @@
+Testing APIs...
+
+❌ PopcornTime Movies: fetch failed
+❌ PopcornTime Alternate: HTML response (cloudflare?)
+✅ APIBay Search: SUCCESS!
+Sample: [{"id":"7349754","name":"Inception (2010) 1080p BrRip x264 - 1.85GB - YIFY","info_hash":"224BF45881252643DFC2E71ABC7B2660A21C68C4","leechers":"62","seeders":"650","size":"1991613584","num_files":"6","username":"YIFY","added":"1339547627","status":"vip","category":"207","imdb":"tt1375666"},{"id":"750
+
+❌ YTS Clone 1: HTML response (cloudflare?)
+❌ YTS Clone 2: HTML response (cloudflare?)
+✅ YTS Clone 3: SUCCESS!
+Sample: {"status":"ok","status_message":"Query was successful. NOTICE: Base URL moving to https://movies-api.accel.li/api/v2/","data":{"movie_count":74044,"limit":1,"page_number":1,"movies":[{"id":75331,"url":"https://yts.bz/movies/the-mortuary-assistant-2026","imdb_code":"tt36647890","title":"The Mortuary 
+
+✅ EZTV: SUCCESS!
+Sample: {"torrents_count":1030280,"limit":1,"page":1,"torrents":[{"id":3078238,"hash":"1ea5850c0fd4dffa44392a8c55efa1f295cb87c2","filename":"Dreaming.Whilst.Black.S02E06.480p.x264-mSD[EZTVx.to].mkv","magnet_url":"magnet:?xt=urn:btih:1ea5850c0fd4dffa44392a8c55efa1f295cb87c2&dn=Dreaming.Whilst.Black.S02E06.48

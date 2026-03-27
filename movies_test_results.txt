@@ -1,0 +1,56 @@
+
+
+══════════════════════════════════════════════════════════
+PHASE 1: Testing YTS mirror + proxy combinations for movie LIST
+══════════════════════════════════════════════════════════
+❌ https://yts.mx via direct: fetch failed
+❌ https://yts.mx via corsproxy.io: HTTP 403
+❌ https://yts.mx via allorigins.win: This operation was aborted
+❌ https://yts.mx via codetabs: HTTP 400
+❌ https://yts.mx via thingproxy: fetch failed
+❌ https://yts.pm via direct: HTTP 404
+❌ https://yts.pm via corsproxy.io: HTTP 403
+❌ https://yts.pm via allorigins.win: This operation was aborted
+❌ https://yts.pm via codetabs: HTML response (interstitial)
+❌ https://yts.pm via thingproxy: fetch failed
+❌ https://yts.rs via direct: HTTP 523
+❌ https://yts.rs via corsproxy.io: HTTP 403
+❌ https://yts.rs via allorigins.win: This operation was aborted
+❌ https://yts.rs via codetabs: Unexpected token 'e', "error code: 523" is not valid JSON
+❌ https://yts.rs via thingproxy: fetch failed
+❌ https://yts.torrentbay.st via direct: HTML response (interstitial)
+❌ https://yts.torrentbay.st via corsproxy.io: HTTP 403
+❌ https://yts.torrentbay.st via allorigins.win: This operation was aborted
+❌ https://yts.torrentbay.st via codetabs: Unexpected token 'e', "tent="Our A"... is not valid JSON
+❌ https://yts.torrentbay.st via thingproxy: fetch failed
+❌ https://en.yts-subs.net via direct: This operation was aborted
+❌ https://en.yts-subs.net via corsproxy.io: HTTP 403
+❌ https://en.yts-subs.net via allorigins.win: This operation was aborted
+❌ https://en.yts-subs.net via codetabs: This operation was aborted
+❌ https://en.yts-subs.net via thingproxy: fetch failed
+❌ https://www.yts.nz via direct: fetch failed
+❌ https://www.yts.nz via corsproxy.io: HTTP 403
+❌ https://www.yts.nz via allorigins.win: This operation was aborted
+❌ https://www.yts.nz via codetabs: HTTP 400
+❌ https://www.yts.nz via thingproxy: fetch failed
+
+
+══ PHASE 1 FAILED: No YTS source worked ══
+Trying alternative movie APIs...
+TMDB popular: 200 — 20 movies
+First: "Peaky Blinders: The Immortal Man"
+
+
+══════════════════════════════════════════════════════════
+PHASE 2: Testing movie SEARCH
+══════════════════════════════════════════════════════════
+
+
+══════════════════════════════════════════════════════════
+PHASE 3: Validating magnet link construction
+══════════════════════════════════════════════════════════
+
+
+══════════════════════════════════════════════════════════
+PHASE 4: Testing thumbnail/poster availability
+══════════════════════════════════════════════════════════

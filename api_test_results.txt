@@ -1,0 +1,30 @@
+[200] yt-api trending:
+{"data":[{"type":"video","videoId":"XelMqi0jlvk","title":"Christmas Songs Playlist🎄Top 2 Hour Christmas Songs 🎅 Best Christmas Music 2026","channelTitle":"Christmas Songs and Carols - Love to Sing","channelId":"UCn0JHLJWiO3_Y5xfNPcF_Ug","channelThumbnail":null,"description":"# Christmas Songs Playlist 🎄 Top 2 Hour Christmas Songs 🎅 Best Christmas Music 2026\n\nEnjoy the festive classic Top Christmas Songs of All Time playlist! This cheerful top Christmas music mix is perfect for singing alon
+---
+[403] youtube-v31 trending:
+{"message":"You are not subscribed to this API."}
+---
+[403] youtube138 trending:
+{"message":"You are not subscribed to this API."}
+---
+[200] yt-api search music:
+{"continuation":"EqwDEgVtdXNpYxqiA1NCU0NBUXMyT0dVNWRYcGhRVGRQUVlJQkMyVnpTSGcxVGtocGNrNHdnZ0VMWVRScFRFYzViazVMVG5PQ0FRczFjVzA0VUVnMGVFRnpjNElCQzBKbmRIbzVkMmRQTXpGdmdnRUxhMUJoTjJKelMzZE1MV09DQVF0aWVGbFlRMmhIYlRNMldZSUJHRlZEVEhoQlV6QXlaVmQyWmxwTE5HbGpVazU2VjBSZlo0SUJDMjlGYW10dk1URkxTWGN3Z2dFTFUzVlhkVVYzTkZacE1XT0NBUXQ1TkVoMU1rVlNaM0p6VFlJQkMxSm5NR1o1ZGxSRVpuVTRnZ0VMYm1oZlgwMXNaa3hUZW0tQ0FRdEhiMlJ0V1ZCbVRXRnBiNElCQ3pBNVVqaGZNbTVLZEdwbmdnRUxja0pDYldNNWQyUkthV2VDQVF0eVFXTjRVWFp1U2tnNVJZSUJDMkV4ZWtRelV
+---
+[403] moviesdatabase top_rated:
+{"message":"You are not subscribed to this API."}
+---
+[429] moviesdatabase search:
+{"message":"Too many requests"}
+---
+[403] imdb-com find:
+{"message":"You are not subscribed to this API."}
+---
+[404] torrent-search Inception:
+{"message":"API doesn't exists"}
+---
+[404] yts-api-v2 list:
+{"message":"API doesn't exists"}
+---
+[403] streaming-availability netflix:
+{"message":"You are not subscribed to this API."}
+---
